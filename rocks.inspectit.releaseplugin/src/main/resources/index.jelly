@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+This plugin provides the ability to update Atlassian JIRA and Confluence using several customizable builders.
+</div>

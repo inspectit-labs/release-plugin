@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+	<f:block>
+	<div>
+	<fieldset style="margin-bottom:1em">
+	<table>
+	<f:nested>
+    <f:entry field="title" title="Title">
+        <f:textbox/>
+    </f:entry>
+  
+    <f:entry field="type" title="Issue type">
+        <f:combobox/>
+    </f:entry>
+    <f:entry field="parentJQL" title= "Parent JQL Filter">
+	       <f:textbox />
+	</f:entry>
+    <f:entry field="affectedVersion" title="Affected Version">
+        <f:combobox/>
+    </f:entry>
+    <f:entry field="priority" title="Priority">
+        <f:combobox/>
+    </f:entry>
+    <f:entry field="description" title="Description">
+        <f:textarea/>
+    </f:entry>
+    <f:entry field = "performDuplicateCheck" title = "Prevent creating duplicates of this Ticket?">
+  		<f:checkbox/>
+	</f:entry>
+    <f:entry title="">
+     <div align="right"> <f:repeatableDeleteButton /> </div> 
+     </f:entry>
+	 </f:nested>
+     </table>
+     </fieldset>
+	 </div>
+	 </f:block>
+     
+     
+</j:jelly>

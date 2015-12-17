@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form"  xmlns:c="/lib/credentials">
+	<f:block>
+	<div>
+	<fieldset style="margin-bottom:1em">
+	<table>
+	<f:nested>
+	  <f:entry field="versionName" title = "Version Name">
+	       <f:textbox />
+	  </f:entry>
+    <f:optionalBlock name="replaceDescription" checked="${instance.replaceDescription}" title="Replace Description" inline="true">
+	  <f:entry field="descriptionText">
+	       <f:textarea />
+	  </f:entry>
+    </f:optionalBlock>
+	<f:radioBlock name="releaseState" title="Keep release state" value="keep"  checked="${instance.releaseState == 'keep' || instance.releaseState == '' || instance.releaseState == null}" inline="true"/>
+	<f:radioBlock name="releaseState" title="Mark as unreleased" value="unreleased"  checked="${instance.releaseState == 'unreleased'}" inline="true"/>
+    <f:radioBlock name="releaseState" title="Mark as released" value="released"  checked="${instance.releaseState == 'released'}" inline="true">
+     	<f:entry>
+     		<f:checkbox field = "failOnJQL" title = "Fail if this version has any ticket assigned matching the following JQL query:" />
+       		<f:textbox field = "failQuery"/>
+		</f:entry>
+    </f:radioBlock>
+    <f:entry title="">
+     <div align="right"> <f:repeatableDeleteButton /> </div> 
+     </f:entry>
+     
+     </f:nested>
+     </table>
+     </fieldset>
+	 </div>
+	 </f:block>
+</j:jelly>

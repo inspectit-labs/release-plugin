@@ -1,0 +1,7 @@
+<div>
+To make use of this option, the build must be triggered by the Github Pull Request builder plugin.<br>
+When the build is then triggered for a certain pull request, the commit messages of all commits associated with this pull request are extracted and <br>
+matched against the regular expression given in this field. All matches in every commit are then used as ticket keys to select the tickets to modify.<br>
+To specify, what part of the regular expression is the actual ticket key, use a named capturing group with the name "key".<Br>
+For example, the regular expression "\[(?&ltkey&gt.*?)\]" will extract the contents specified in square brackets as Ticket keys.
+</div>
