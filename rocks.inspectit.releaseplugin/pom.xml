@@ -19,8 +19,7 @@
 	<name>Jenkins Release Helper Plugin</name>
 	<licenses>
 		<license>
-			<name>MIT License</name>
-			<url>http://opensource.org/licenses/MIT</url>
+			<name>AGPLv3</name>
 		</license>
 	</licenses>
 	<!-- If you want this to appear on the wiki page: <developers> <developer> 
