@@ -38,6 +38,7 @@ import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHReleaseBuilder;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
 import org.kohsuke.github.PagedIterable;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -205,13 +206,13 @@ public class GithubReleasePublisher extends Notifier {
 			releaseBuilder.prerelease(isPrerelease);
 			releaseBuilder.body(pageHTML);
 			
-
+			GHSerializableConnection ghConnection = new GHSerializableConnection(repositoryName);
 			
 			final GHRelease rel = releaseBuilder.create();
 			for (FilePath path : build.getWorkspace().list(artifactPatterns)) {
 
 				logger.println("Uploading asset to release: " + path.getName());
-				path.act(new GHReleaseFileCallable(repositoryName.getHost(),repositoryName.getUserName(),repositoryName.getRepositoryName(),releaseName));
+				path.act(new GHReleaseFileCallable(ghConnection,releaseName));
 			}
 			
 			
@@ -300,20 +301,8 @@ public class GithubReleasePublisher extends Notifier {
 	private static final class GHReleaseFileCallable implements
 			FileCallable<Void> {
 		
-		/**
-		 * the host of the repository.
-		 */
-		private final String repoHost;
 		
-		/**
-		 * the user who owns the repository.
-		 */
-		private final String repoUser;
-
-		/**
-		 * the repository name.
-		 */
-		private final String repoName;
+		GHSerializableConnection ghConnection;
 
 		/**
 		 * the release the file will be uploaded to.
@@ -332,11 +321,9 @@ public class GithubReleasePublisher extends Notifier {
 		 * @param repoName the name of the repo
 		 * @param releaseName the name of the release
 		 */
-		private GHReleaseFileCallable(String host, String username, String repoName, String releaseName) {
+		private GHReleaseFileCallable(GHSerializableConnection ghConnection, String releaseName) {
 			this.releaseName = releaseName;
-			this.repoHost = host;
-			this.repoUser = username;
-			this.repoName = repoName;
+			this.ghConnection = ghConnection;
 		}
 
 		@Override
@@ -349,9 +336,10 @@ public class GithubReleasePublisher extends Notifier {
 			//connect to the repository fro mthis node
 			
 			GHRelease releaseToUploadTo = null;
-			//System.out.println(repoHost+","+repoUser+","+repoName+" - "+releaseName);
-			GitHubRepositoryName repoNameInst = new GitHubRepositoryName(repoHost, repoUser, repoName);
-			GHRepository repo = repoNameInst.resolveOne();
+			
+			GitHub github = ghConnection.connect();
+			GHRepository repo = github.getRepository(ghConnection.getTotalRepositoryName());
+			
 			PagedIterable<GHRelease> listReleases = repo.listReleases();
 			for (GHRelease release : listReleases) {
 				if (release.getName().equals(releaseName)) {
@@ -366,6 +354,7 @@ public class GithubReleasePublisher extends Notifier {
 				mimeType = "text/plain";
 			}
 			releaseToUploadTo.uploadAsset(f, mimeType);
+			
 			return null;
 		}
 	}
