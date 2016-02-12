@@ -57,7 +57,7 @@ public class JIRAVersionEditor extends AbstractJIRAAction {
 		PrintStream logger = listener.getLogger();
 
 		JIRAProjectCredentials cred = getJiraCredentials();
-		JIRAAccessTool jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), cred.getProjectKey());
+		JIRAAccessTool jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), cred.getProjectKey(), getJiraCredentialsID());
 
 		for (ModifyAddVersionTemplate mod : versionModifiactions) {
 			mod.applyModifications(jira, varReplacer, logger);

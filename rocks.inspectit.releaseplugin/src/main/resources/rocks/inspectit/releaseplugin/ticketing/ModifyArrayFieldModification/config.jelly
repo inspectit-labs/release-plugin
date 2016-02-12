@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry field="fieldHumanReadableName" title="Name of the field to set">
+        <f:combobox/>
+    </f:entry>
+    <f:radioBlock name="modificationType" title="Add" value="add"  checked="${instance.modificationType == 'add' || instance.releaseState == '' || instance.releaseState == null}" inline="true"/>
+	<f:radioBlock name="modificationType" title="Remove" value="remove"  checked="${instance.modificationType == 'remove'}" inline="true"/>
+	<f:radioBlock name="modificationType" title="Replace" value="replace"  checked="${instance.modificationType == 'replace'}" inline="true"/>
+    <f:entry field="modificationValue" title="Value">
+        <f:textbox/>
+    </f:entry>
+  
+</j:jelly>

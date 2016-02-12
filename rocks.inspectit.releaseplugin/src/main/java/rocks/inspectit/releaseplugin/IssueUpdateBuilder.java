@@ -1,8 +1,13 @@
 package rocks.inspectit.releaseplugin;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 /**
  * Utility class for building the data sent to /ISSUE_KEY/ PUT requests to update issues.
@@ -17,6 +22,8 @@ public class IssueUpdateBuilder {
 	 * The name of the "versions" property used in JSON requests.
 	 */
 	private static final String VERSION_FIELD = "versions";
+
+	public static final Set<String> SUPPORTED_TYPES = new HashSet<>(Arrays.asList("any","number","string","version"));
 	
 	/**
 	 * Stores the currently buffered updates.
@@ -64,6 +71,40 @@ public class IssueUpdateBuilder {
 	public void addAffectedVersion(String versionName) {
 		getFieldUpdates(VERSION_FIELD).add(buildAdd(builNameReference(versionName)));
 	}
+	
+	public void setFieldValue(String fieldName, String fieldType, String value) {
+		JsonElement newValue = packageValue(fieldType, value);
+		getFieldUpdates(fieldName).add(buildSet(newValue));
+	}
+	
+	public void setArrayField(String fieldName, String fieldType, String... values) {
+		JsonArray arr = new JsonArray();
+		for (String value : values) {
+			arr.add(packageValue(fieldType, value));
+		}
+		getFieldUpdates(fieldName).add(buildSet(arr));
+	}
+
+	private JsonElement packageValue(String fieldType, String value) {
+		JsonElement newValue;
+		if (fieldType.equals("version")) {
+			newValue = builNameReference(value);
+		} else {
+			newValue = new JsonPrimitive(value);
+		}
+		return newValue;
+	}
+	
+	public void addFieldValue(String fieldName, String fieldType, String value) {
+		JsonElement newValue = packageValue(fieldType, value);
+		getFieldUpdates(fieldName).add(buildAdd(newValue));
+	}
+	
+	public void removeFieldValue(String fieldName, String fieldType, String value) {
+		JsonElement newValue = packageValue(fieldType, value);
+		getFieldUpdates(fieldName).add(buildRemove(newValue));
+	}
+	
 
 	/**
 	 * 

@@ -11,6 +11,7 @@ import com.atlassian.jira.rest.client.api.VersionRestClient;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.BasicIssueType;
 import com.atlassian.jira.rest.client.api.domain.BasicPriority;
+import com.atlassian.jira.rest.client.api.domain.Field;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Priority;
@@ -33,10 +34,14 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientF
  */
 public class JIRAAccessTool {
 	
+	
 	/**
 	 * The JIRA API client.
 	 */
 	private JiraRestClient restClient;
+	
+	String jenkinsCredentialsId;
+	
 	/**
 	 * The url of JIRA.
 	 */
@@ -90,14 +95,19 @@ public class JIRAAccessTool {
 	 * @param password the password used for access
 	 * @param projectKey the key of the project
 	 */
-	public JIRAAccessTool(String url, String user, String password, String projectKey) {
+	public JIRAAccessTool(String url, String user, String password, String projectKey, String jenkinsCredentialsId) {
 		this.url = url;
 		this.user = user;
 		this.password = password;
 		this.projectKey = projectKey;
+		this.jenkinsCredentialsId = jenkinsCredentialsId;
 		connect();
 	}
 	
+	public String getJenkinsCredentialsId() {
+		return jenkinsCredentialsId;
+	}
+
 	/**
 	 * @return A list of the names of all Issue types.
 	 */
@@ -400,6 +410,13 @@ public class JIRAAccessTool {
 		restClient.getIssueClient().transition(issue, transition).claim();
 	}
 
-	
+	public List<FieldMetadata> getAvailableFields() {
+		List<FieldMetadata> result = new ArrayList<FieldMetadata>();
+		for(Field f : restClient.getMetadataClient().getFields().claim()) {
+			
+			result.add(new FieldMetadata(f));
+		}
+		return result;
+	}
 	
 }

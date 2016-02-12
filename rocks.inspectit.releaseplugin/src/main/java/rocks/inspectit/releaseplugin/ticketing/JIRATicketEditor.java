@@ -69,7 +69,7 @@ public class JIRATicketEditor extends AbstractJIRAAction {
 		JIRAProjectCredentials cred = getJiraCredentials();
 		
 		
-		JIRAAccessTool jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), cred.getProjectKey());
+		JIRAAccessTool jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), cred.getProjectKey(), getJiraCredentialsID());
 
 		
 		for (ModifyTicketsTemplate temp : modifyTicketsTemplates) {

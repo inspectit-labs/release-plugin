@@ -96,7 +96,7 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
 		JIRAProjectCredentials jiraCred = getJiraCredentials();
 		ConfluenceCredentials confCred = getConfluenceCredentials();
 		
-		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(), jiraCred.getProjectKey());
+		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(), jiraCred.getProjectKey(), getJiraCredentialsID());
 		ConfluenceAccessTool confluence = new ConfluenceAccessTool(confCred.getUrl(), confCred.getUrlUsername(), confCred.getUrlPassword());
 
 		String jqlFilter = varReplacer.replace(this.jqlFilter);
