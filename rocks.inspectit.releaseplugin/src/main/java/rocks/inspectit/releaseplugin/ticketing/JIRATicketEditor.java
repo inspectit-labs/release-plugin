@@ -69,7 +69,7 @@ public class JIRATicketEditor extends AbstractJIRAAction {
 		JIRAProjectCredentials cred = getJiraCredentials();
 		
 		
-		JIRAAccessTool jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), cred.getProjectKey(), getJiraCredentialsID());
+		JIRAAccessTool jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), null, cred.getProjectKey(), getJiraCredentialsID());
 
 		
 		for (ModifyTicketsTemplate temp : modifyTicketsTemplates) {
@@ -77,7 +77,9 @@ public class JIRATicketEditor extends AbstractJIRAAction {
 		}
 		
 		for (AddTicketTemplate temp : newTicketsTemplates) {
-			temp.publishTicket(jira, varReplacer, logger);
+			temp.publishTicket(jira, varReplacer, logger, build.getEnvironment(listener));
+			//might cause new variables to be added, so regenerate it
+			varReplacer = getVariablesSubstitutor(build, listener);
 		}
 		
 	

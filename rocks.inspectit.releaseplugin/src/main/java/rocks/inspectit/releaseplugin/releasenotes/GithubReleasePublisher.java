@@ -167,7 +167,7 @@ public class GithubReleasePublisher extends Notifier {
 
 		JIRAProjectCredentials jiraCred = getJiraCredentials();
 		
-		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(), jiraCred.getProjectKey(), getJiraCredentialsID());
+		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(),null, jiraCred.getProjectKey(), getJiraCredentialsID());
 		
 		String jqlFilter = varReplacer.replace(this.jqlFilter);
 		String repoName = varReplacer.replace(this.repoName);

@@ -22,6 +22,8 @@ public class IssueUpdateBuilder {
 	 * The name of the "versions" property used in JSON requests.
 	 */
 	private static final String VERSION_FIELD = "versions";
+	
+	private static final String COMMENT_FIELD = "comment";
 
 	public static final Set<String> SUPPORTED_TYPES = new HashSet<>(Arrays.asList("any","number","string","version"));
 	
@@ -72,6 +74,24 @@ public class IssueUpdateBuilder {
 		getFieldUpdates(VERSION_FIELD).add(buildAdd(builNameReference(versionName)));
 	}
 	
+
+	/**
+	 * 
+	 * Adds the given version to the list of affected versions.
+	 *  
+	 * @param versionName
+	 * 		the name of the version to add.
+	 */
+	public void addComment(String body) {
+		getFieldUpdates(COMMENT_FIELD).add(buildAdd(buildComment(body)));
+	}
+	
+	private JsonElement buildComment(String body) {
+		JsonObject comment = new JsonObject();
+		comment.addProperty("body", body);
+		return comment;
+	}
+
 	public void setFieldValue(String fieldName, String fieldType, String value) {
 		JsonElement newValue = packageValue(fieldType, value);
 		getFieldUpdates(fieldName).add(buildSet(newValue));

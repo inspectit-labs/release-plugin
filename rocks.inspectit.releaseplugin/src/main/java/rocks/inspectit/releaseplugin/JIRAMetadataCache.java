@@ -295,7 +295,7 @@ public final class JIRAMetadataCache {
 		JIRAProjectCredentials cred = JIRAProjectCredentials.getByID(credentialsID);
 		JIRAAccessTool jira = null;
     	try {
-    		jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), cred.getProjectKey(), credentialsID);
+    		jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(),null, cred.getProjectKey(), credentialsID);
     		return commands.apply(jira);
     	} catch (Exception e) {
     		return null;

@@ -6,6 +6,7 @@
 	<fieldset style="margin-bottom:1em">
 	<table>
 	<f:nested>
+   
     <f:entry field="title" title="Title">
         <f:textbox/>
     </f:entry>

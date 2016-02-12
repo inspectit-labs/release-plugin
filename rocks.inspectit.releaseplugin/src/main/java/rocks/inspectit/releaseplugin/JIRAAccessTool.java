@@ -54,6 +54,9 @@ public class JIRAAccessTool {
 	 * The password used for access.
 	 */
 	private String password;
+	
+	private String proxy;
+	
 	/**
 	 * The key of the project on which this tool operates.
 	 */
@@ -95,10 +98,11 @@ public class JIRAAccessTool {
 	 * @param password the password used for access
 	 * @param projectKey the key of the project
 	 */
-	public JIRAAccessTool(String url, String user, String password, String projectKey, String jenkinsCredentialsId) {
+	public JIRAAccessTool(String url, String user, String password, String proxy, String projectKey, String jenkinsCredentialsId) {
 		this.url = url;
 		this.user = user;
 		this.password = password;
+		this.proxy = proxy;
 		this.projectKey = projectKey;
 		this.jenkinsCredentialsId = jenkinsCredentialsId;
 		connect();
@@ -164,10 +168,14 @@ public class JIRAAccessTool {
 	 * private method for initiating the connection.
 	 */
 	private void connect() {
-		final AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-		restClient = factory.createWithBasicHttpAuthentication(URI.create(url), user, password);
 		
-		jsonClient = new JsonHTTPClientWrapper(url, user, password);
+		jsonClient = new JsonHTTPClientWrapper(url, user, password, proxy);
+		
+		final AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+		//TODO: create rest client with proxy
+		
+		restClient = factory.createWithBasicHttpAuthentication(URI.create(url), user, password);
+		//restClient = factory.create(URI.create(url), jsonClient.getHttpClient());
 		
 	}
 	

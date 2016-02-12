@@ -1,5 +1,6 @@
 package rocks.inspectit.releaseplugin.ticketing;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.RelativePath;
 import hudson.model.AbstractDescribableImpl;
@@ -64,6 +65,12 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 	 * The long description text of the ticket.
 	 */
 	private String description;	
+	
+
+	/**
+	 * If non-null / empty, the ticket key of the generated ticket will be stored in this environment variable.
+	 */
+	private String envVarName;	
 
 	private List<AddTicketField> fieldValues;
 	
@@ -81,7 +88,7 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 	 */
 	@DataBoundConstructor
 	public AddTicketTemplate(boolean performDuplicateCheck, String parentJQL, String title, String type,
-			String priority, String description, List<AddTicketField> fieldValues) {
+			String priority, String description,String envVarName, List<AddTicketField> fieldValues) {
 		super();
 		this.performDuplicateCheck = performDuplicateCheck;
 		this.parentJQL = parentJQL;
@@ -89,6 +96,7 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 		this.type = type;
 		this.priority = priority;
 		this.description = description;
+		this.envVarName = envVarName;
 		this.fieldValues = fieldValues == null ? new ArrayList<AddTicketField>() : fieldValues;
 	}
 
@@ -118,6 +126,10 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 	}
 	
 	
+	public String getEnvVarName() {
+		return envVarName;
+	}
+
 	public List<AddTicketField> getFieldValues() {
 		return fieldValues;
 	}
@@ -133,7 +145,7 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 	 * @param logger
 	 * 		log printstream
 	 */
-	public void publishTicket(final JIRAAccessTool jira, final StrSubstitutor varReplacer, final PrintStream logger) {
+	public void publishTicket(final JIRAAccessTool jira, final StrSubstitutor varReplacer, final PrintStream logger, EnvVars vars) {
 		final String title = varReplacer.replace(this.title);
 		String type = varReplacer.replace(this.type);
 		String priority = varReplacer.replace(this.priority);
@@ -206,6 +218,12 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 					}
 				}
 			});
+		}
+		
+		String realEnvVar = varReplacer.replace(envVarName == null? ""  : envVarName);
+		if(!realEnvVar.isEmpty()) {
+			logger.print("Setting var "+realEnvVar);
+			vars.put(realEnvVar, ticketKey);
 		}
 		
 		
