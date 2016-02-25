@@ -1,5 +1,6 @@
 package rocks.inspectit.releaseplugin.ticketing;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.RelativePath;
 import hudson.model.AbstractDescribableImpl;
@@ -7,6 +8,7 @@ import hudson.model.Descriptor;
 import hudson.util.ComboBoxModel;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,6 +16,8 @@ import org.apache.commons.lang.text.StrSubstitutor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import rocks.inspectit.releaseplugin.FieldMetadata;
+import rocks.inspectit.releaseplugin.IssueUpdateBuilder;
 import rocks.inspectit.releaseplugin.JIRAAccessTool;
 import rocks.inspectit.releaseplugin.JIRAMetadataCache;
 import rocks.inspectit.releaseplugin.JIRAAccessTool.BuildingLambda;
@@ -54,10 +58,6 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 	 */
 	private String type;
 	/**
-	 * The affected version of this ticket, can be empty.
-	 */
-	private String affectedVersion;
-	/**
 	 * The priority of this new ticket.
 	 */
 	private String priority;
@@ -65,7 +65,14 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 	 * The long description text of the ticket.
 	 */
 	private String description;	
+	
 
+	/**
+	 * If non-null / empty, the ticket key of the generated ticket will be stored in this environment variable.
+	 */
+	private String envVarName;	
+
+	private List<AddTicketField> fieldValues;
 	
 	
 
@@ -81,15 +88,16 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 	 */
 	@DataBoundConstructor
 	public AddTicketTemplate(boolean performDuplicateCheck, String parentJQL, String title, String type,
-			String affectedVersion, String priority, String description) {
+			String priority, String description,String envVarName, List<AddTicketField> fieldValues) {
 		super();
 		this.performDuplicateCheck = performDuplicateCheck;
 		this.parentJQL = parentJQL;
 		this.title = title;
 		this.type = type;
-		this.affectedVersion = affectedVersion;
 		this.priority = priority;
 		this.description = description;
+		this.envVarName = envVarName;
+		this.fieldValues = fieldValues == null ? new ArrayList<AddTicketField>() : fieldValues;
 	}
 
 	public String getTitle() {
@@ -113,13 +121,19 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 		return performDuplicateCheck;
 	}
 
-	public String getAffectedVersion() {
-		return affectedVersion;
-	}
-
 	public String getParentJQL() {
 		return parentJQL;
 	}
+	
+	
+	public String getEnvVarName() {
+		return envVarName;
+	}
+
+	public List<AddTicketField> getFieldValues() {
+		return fieldValues;
+	}
+
 	/**
 	 * Publishes this TIcket on JIRA, if it does not yet exist.
 	 * A ticket is considered to be already existing, when a ticket with matching version and title already exists.
@@ -131,19 +145,15 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 	 * @param logger
 	 * 		log printstream
 	 */
-	public void publishTicket(JIRAAccessTool jira, StrSubstitutor varReplacer, PrintStream logger) {
+	public void publishTicket(final JIRAAccessTool jira, final StrSubstitutor varReplacer, final PrintStream logger, EnvVars vars) {
 		final String title = varReplacer.replace(this.title);
 		String type = varReplacer.replace(this.type);
-		String affectedVersion = varReplacer.replace(this.affectedVersion);
 		String priority = varReplacer.replace(this.priority);
 		final String description = varReplacer.replace(this.description);
 		String parentJQL = varReplacer.replace(this.parentJQL);
 	
 		if (performDuplicateCheck) {
 			String jql = "summary ~ \"" + title + "\"";
-			if (!affectedVersion.isEmpty()) {
-				jql += " AND affectedVersion = \"" + affectedVersion + "\" ";
-			}
 			
 			/*
 			boolean alreadyPresent = 
@@ -167,9 +177,6 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 		
 		BasicIssueType issueType = jira.getIssueTypeByName(type);
 		final BasicPriority issuePriority = jira.getIssuePriorityByName(priority);
-		
-		final Version version = jira.getVersionByName(affectedVersion);
-		
 
 		logger.println("Creating Ticket \"" + title + "\".");
 		String parentKey = null;
@@ -185,13 +192,10 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 		
 		final String finalParentKey = parentKey;
 		
-		jira.addTicket(new BuildingLambda<IssueInputBuilder>() {
+		final String ticketKey = jira.addTicket(new BuildingLambda<IssueInputBuilder>() {
 			
 			@Override
 			public void build(IssueInputBuilder b) {
-				if (version != null) {
-					b.setAffectedVersions(Arrays.asList(version));				
-				}
 				b.setSummary(title);
 				b.setDescription(description);
 				if (issuePriority != null) {
@@ -202,8 +206,25 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 					
 				}
 			}
-		}, issueType);
+		}, issueType).getKey();
 		
+		if(!fieldValues.isEmpty()) {
+			jira.updateTicket(ticketKey, new BuildingLambda<IssueUpdateBuilder>() {
+
+				@Override
+				public void build(IssueUpdateBuilder builder) {
+					for(AddTicketField addOp : fieldValues) {
+						addOp.apply(builder, jira, varReplacer, logger);
+					}
+				}
+			});
+		}
+		
+		String realEnvVar = varReplacer.replace(envVarName == null? ""  : envVarName);
+		if(!realEnvVar.isEmpty()) {
+			logger.print("Setting var "+realEnvVar);
+			vars.put(realEnvVar, ticketKey);
+		}
 		
 		
 	}
@@ -241,18 +262,6 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
     		return result;
         }
 
-        /**
-         * Combobox populating method.
-         * @param jiraCredentialsID the credentials used for access.
-         * @return a ComboBoxModel containing the JIRA values as suggestions
-         */
-        public ComboBoxModel doFillAffectedVersionItems(@RelativePath("..") @QueryParameter String jiraCredentialsID) { 	
-        	ComboBoxModel result = new ComboBoxModel();
-        	result.addAll(JIRAMetadataCache.getSingleton().getAvailableVersions(jiraCredentialsID));
-    		
-    		return result;
-        }
-        
     }
 	
 	

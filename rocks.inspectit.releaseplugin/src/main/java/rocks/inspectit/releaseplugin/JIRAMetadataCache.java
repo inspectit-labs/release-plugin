@@ -74,6 +74,11 @@ public final class JIRAMetadataCache {
 	 */
 	private static final String PROJECT_VERSIONS = "PROJECT_VERSIONS";
 	
+
+	/**
+	 * key used for internal storage.
+	 */
+	private static final String FIELD_METADATA = "FIELD_METADATA";
 	
 	/**
 	 * The actual cache.
@@ -206,6 +211,32 @@ public final class JIRAMetadataCache {
 		return result == null ? new ArrayList<String>() : result;
 		
 	}
+
+	
+	/**
+	 * returns the metadata of all available fields
+	 * @param credentialsID
+	 * 		the id of the credentials of the JIRA project.
+	 * @return
+	 * 		a list with the names of the versions.
+	 */
+	public List<FieldMetadata> getFieldMetadata(final String credentialsID) {
+		
+		List<FieldMetadata> result = getCreateCacheEntry(credentialsID, FIELD_METADATA, new Supplier<List<FieldMetadata>>() {
+			@Override
+			public List<FieldMetadata> get() {
+				return unsafeExecuteJiraCommands(credentialsID, new Function<JIRAAccessTool, List<FieldMetadata>>() {
+					@Override
+					public List<FieldMetadata> apply(JIRAAccessTool jira) {
+						return Collections.unmodifiableList(jira.getAvailableFields());
+					}
+					
+				});
+			}
+		});
+		return result == null ? new ArrayList<FieldMetadata>() : result;
+		
+	}
 	
 	/**
 	 * Private utility method which does the following:
@@ -264,7 +295,7 @@ public final class JIRAMetadataCache {
 		JIRAProjectCredentials cred = JIRAProjectCredentials.getByID(credentialsID);
 		JIRAAccessTool jira = null;
     	try {
-    		jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), cred.getProjectKey());
+    		jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(),null, cred.getProjectKey(), credentialsID);
     		return commands.apply(jira);
     	} catch (Exception e) {
     		return null;

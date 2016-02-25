@@ -1,15 +1,24 @@
 package rocks.inspectit.releaseplugin.ticketing;
 
 import hudson.Extension;
+import hudson.RelativePath;
 import hudson.model.Descriptor;
+import hudson.util.ComboBoxModel;
 
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
+import rocks.inspectit.releaseplugin.FieldMetadata;
 import rocks.inspectit.releaseplugin.IssueUpdateBuilder;
 import rocks.inspectit.releaseplugin.JIRAAccessTool;
+import rocks.inspectit.releaseplugin.JIRAMetadataCache;
 import rocks.inspectit.releaseplugin.JIRAAccessTool.BuildingLambda;
 
 
@@ -20,27 +29,30 @@ import rocks.inspectit.releaseplugin.JIRAAccessTool.BuildingLambda;
  * @author Jonas Kunz
  *
  */
-public class AddAffectedVersionModification extends TicketModification {
-
-	/**
-	 * The name of the version which wil lbe added.
-	 */
-	private String versionToAdd;
+public class AddCommentModification extends TicketModification {
 	
+	/**
+	 * The comment text to add.
+	 */
+	private String commentBody;
 	
 	/**
 	 * Constructor.
-	 * @param versionToAdd the version to add
+	 * @param commentBody the body of the comment to add
 	 */
 	@DataBoundConstructor
-	public AddAffectedVersionModification(String versionToAdd) {
+	public AddCommentModification(String commentBody) {
 		super();
-		this.versionToAdd = versionToAdd;
+		this.commentBody = commentBody;
 	}
 
-	public String getVersionToAdd() {
-		return versionToAdd;
+
+
+	public String getCommentBody() {
+		return commentBody;
 	}
+
+
 
 
 	/**
@@ -52,7 +64,7 @@ public class AddAffectedVersionModification extends TicketModification {
 
 		@Override
 		public String getDisplayName() {
-			return "Add Affected Version";
+			return "Add Comment";
 		}
 		
 	}
@@ -60,11 +72,14 @@ public class AddAffectedVersionModification extends TicketModification {
 
 	@Override
 	public void apply(String ticketKey, JIRAAccessTool jira, final StrSubstitutor varReplacer, PrintStream logger) {
-		jira.updateTicket(ticketKey, new BuildingLambda<IssueUpdateBuilder>() {
-			@Override
-			public void build(IssueUpdateBuilder b) {
-				b.addAffectedVersion(varReplacer.replace(versionToAdd));
-			}
-		});
+		if (commentBody != null && !commentBody.isEmpty()) {
+			//find the field definition
+			jira.updateTicket(ticketKey, new BuildingLambda<IssueUpdateBuilder>() {
+				@Override
+				public void build(IssueUpdateBuilder b) {
+					b.addComment(varReplacer.replace(commentBody));
+				}
+			});
+		}		
 	}
 }

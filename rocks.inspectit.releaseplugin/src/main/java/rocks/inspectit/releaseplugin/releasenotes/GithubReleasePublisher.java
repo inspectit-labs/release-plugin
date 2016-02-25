@@ -38,6 +38,8 @@ import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHReleaseBuilder;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.PagedIterable;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -165,7 +167,7 @@ public class GithubReleasePublisher extends Notifier {
 
 		JIRAProjectCredentials jiraCred = getJiraCredentials();
 		
-		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(), jiraCred.getProjectKey());
+		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(),null, jiraCred.getProjectKey(), getJiraCredentialsID());
 		
 		String jqlFilter = varReplacer.replace(this.jqlFilter);
 		String repoName = varReplacer.replace(this.repoName);
@@ -174,10 +176,12 @@ public class GithubReleasePublisher extends Notifier {
 		String releaseName = varReplacer.replace(this.releaseName);
 		
 		GHRepository repo = null;
+		GitHubRepositoryName repositoryName = null;
 		
 		for (GitHubRepositoryName name : GitHubRepositoryNameContributor.parseAssociatedNames((Job<?, ?>) build.getProject())) {
 		    for (GHRepository repository : name.resolve()) {
 		    	if (repoName.equalsIgnoreCase(repository.getFullName())) {
+		    		repositoryName = name;
 		    		repo = repository;
 		    	}
 		    }
@@ -201,32 +205,14 @@ public class GithubReleasePublisher extends Notifier {
 			releaseBuilder.name(releaseName);
 			releaseBuilder.prerelease(isPrerelease);
 			releaseBuilder.body(pageHTML);
-
+			
+			GHSerializableConnection ghConnection = new GHSerializableConnection(repositoryName);
+			
 			final GHRelease rel = releaseBuilder.create();
 			for (FilePath path : build.getWorkspace().list(artifactPatterns)) {
 
 				logger.println("Uploading asset to release: " + path.getName());
-				
-				path.act(new FileCallable<Void>() {
-					private static final long serialVersionUID = 1L;
-
-					@Override
-					public void checkRoles(RoleChecker checker) throws SecurityException {
-						// TODO Auto-generated method stub
-					}
-
-					@Override
-					public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-						String mimeType = Files.probeContentType(f.toPath());
-						//if the mime type cannot be determined, use plain/text
-						System.out.println(mimeType);
-						if (mimeType == null) {
-							mimeType = "text/plain";
-						}
-						rel.uploadAsset(f, mimeType);
-						return null;
-					}
-				});
+				path.act(new GHReleaseFileCallable(ghConnection,releaseName));
 			}
 			
 			
@@ -304,6 +290,73 @@ public class GithubReleasePublisher extends Notifier {
 	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.BUILD;
+	}
+
+
+
+	/**
+	 * Uploads a file as an asset to a certain github release.
+	 * @author Jonas Kunz
+	 */
+	private static final class GHReleaseFileCallable implements
+			FileCallable<Void> {
+		
+		
+		GHSerializableConnection ghConnection;
+
+		/**
+		 * the release the file will be uploaded to.
+		 */
+		private final String releaseName;
+		
+		/**
+		 * Serialization UID.
+		 */
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * Constructor.
+		 * @param host the repo host
+		 * @param username the repo owner
+		 * @param repoName the name of the repo
+		 * @param releaseName the name of the release
+		 */
+		private GHReleaseFileCallable(GHSerializableConnection ghConnection, String releaseName) {
+			this.releaseName = releaseName;
+			this.ghConnection = ghConnection;
+		}
+
+		@Override
+		public void checkRoles(RoleChecker checker) throws SecurityException {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+			//connect to the repository fro mthis node
+			
+			GHRelease releaseToUploadTo = null;
+			
+			GitHub github = ghConnection.connect();
+			GHRepository repo = github.getRepository(ghConnection.getTotalRepositoryName());
+			
+			PagedIterable<GHRelease> listReleases = repo.listReleases();
+			for (GHRelease release : listReleases) {
+				if (release.getName().equals(releaseName)) {
+					releaseToUploadTo = release;
+				}
+			}
+			
+			String mimeType = Files.probeContentType(f.toPath());
+			//if the mime type cannot be determined, use plain/text
+			//System.out.println(mimeType);
+			if (mimeType == null) {
+				mimeType = "text/plain";
+			}
+			releaseToUploadTo.uploadAsset(f, mimeType);
+			
+			return null;
+		}
 	}
 
 

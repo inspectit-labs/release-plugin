@@ -11,6 +11,7 @@ import com.atlassian.jira.rest.client.api.VersionRestClient;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.BasicIssueType;
 import com.atlassian.jira.rest.client.api.domain.BasicPriority;
+import com.atlassian.jira.rest.client.api.domain.Field;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Priority;
@@ -33,10 +34,14 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientF
  */
 public class JIRAAccessTool {
 	
+	
 	/**
 	 * The JIRA API client.
 	 */
 	private JiraRestClient restClient;
+	
+	String jenkinsCredentialsId;
+	
 	/**
 	 * The url of JIRA.
 	 */
@@ -49,6 +54,9 @@ public class JIRAAccessTool {
 	 * The password used for access.
 	 */
 	private String password;
+	
+	private String proxy;
+	
 	/**
 	 * The key of the project on which this tool operates.
 	 */
@@ -90,14 +98,20 @@ public class JIRAAccessTool {
 	 * @param password the password used for access
 	 * @param projectKey the key of the project
 	 */
-	public JIRAAccessTool(String url, String user, String password, String projectKey) {
+	public JIRAAccessTool(String url, String user, String password, String proxy, String projectKey, String jenkinsCredentialsId) {
 		this.url = url;
 		this.user = user;
 		this.password = password;
+		this.proxy = proxy;
 		this.projectKey = projectKey;
+		this.jenkinsCredentialsId = jenkinsCredentialsId;
 		connect();
 	}
 	
+	public String getJenkinsCredentialsId() {
+		return jenkinsCredentialsId;
+	}
+
 	/**
 	 * @return A list of the names of all Issue types.
 	 */
@@ -154,10 +168,14 @@ public class JIRAAccessTool {
 	 * private method for initiating the connection.
 	 */
 	private void connect() {
-		final AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-		restClient = factory.createWithBasicHttpAuthentication(URI.create(url), user, password);
 		
-		jsonClient = new JsonHTTPClientWrapper(url, user, password);
+		jsonClient = new JsonHTTPClientWrapper(url, user, password, proxy);
+		
+		final AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+		//TODO: create rest client with proxy
+		
+		restClient = factory.createWithBasicHttpAuthentication(URI.create(url), user, password);
+		//restClient = factory.create(URI.create(url), jsonClient.getHttpClient());
 		
 	}
 	
@@ -400,6 +418,13 @@ public class JIRAAccessTool {
 		restClient.getIssueClient().transition(issue, transition).claim();
 	}
 
-	
+	public List<FieldMetadata> getAvailableFields() {
+		List<FieldMetadata> result = new ArrayList<FieldMetadata>();
+		for(Field f : restClient.getMetadataClient().getFields().claim()) {
+			
+			result.add(new FieldMetadata(f));
+		}
+		return result;
+	}
 	
 }

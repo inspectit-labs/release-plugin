@@ -30,9 +30,9 @@ public class ConfluenceAccessTool {
 	 * @param user the username
 	 * @param password the password
 	 */
-	public ConfluenceAccessTool(String url, String user, String password) {
+	public ConfluenceAccessTool(String url, String user, String password, String proxy) {
 		super();
-		client = new JsonHTTPClientWrapper(url, user, password);
+		client = new JsonHTTPClientWrapper(url, user, password, proxy);
 	}
 
 

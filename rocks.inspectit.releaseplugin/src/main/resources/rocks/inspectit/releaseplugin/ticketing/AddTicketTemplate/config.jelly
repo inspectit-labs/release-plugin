@@ -6,6 +6,7 @@
 	<fieldset style="margin-bottom:1em">
 	<table>
 	<f:nested>
+   
     <f:entry field="title" title="Title">
         <f:textbox/>
     </f:entry>
@@ -16,9 +17,6 @@
     <f:entry field="parentJQL" title= "Parent JQL Filter">
 	       <f:textbox />
 	</f:entry>
-    <f:entry field="affectedVersion" title="Affected Version">
-        <f:combobox/>
-    </f:entry>
     <f:entry field="priority" title="Priority">
         <f:combobox/>
     </f:entry>
@@ -28,6 +26,11 @@
     <f:entry field = "performDuplicateCheck" title = "Prevent creating duplicates of this Ticket?">
   		<f:checkbox/>
 	</f:entry>
+	<f:block>
+		<div style="padding-left: 2em">
+        	<f:repeatableProperty field="fieldValues" add ="Add Field Value" header = "Field Value"/>
+    	</div>
+    </f:block>
     <f:entry title="">
      <div align="right"> <f:repeatableDeleteButton /> </div> 
      </f:entry>
