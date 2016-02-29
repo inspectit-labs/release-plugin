@@ -29,6 +29,7 @@ public class ConfluenceAccessTool {
 	 * @param url the url of confluence
 	 * @param user the username
 	 * @param password the password
+	 * @param proxy the proxy to use for building the connection
 	 */
 	public ConfluenceAccessTool(String url, String user, String password, String proxy) {
 		super();

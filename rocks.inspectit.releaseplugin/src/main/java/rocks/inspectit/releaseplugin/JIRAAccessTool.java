@@ -40,6 +40,9 @@ public class JIRAAccessTool {
 	 */
 	private JiraRestClient restClient;
 	
+	/**
+	 * The credentials id this connection was created with.
+	 */
 	String jenkinsCredentialsId;
 	
 	/**
@@ -55,6 +58,9 @@ public class JIRAAccessTool {
 	 */
 	private String password;
 	
+	/**
+	 * The proxy to use.
+	 */
 	private String proxy;
 	
 	/**
@@ -96,7 +102,9 @@ public class JIRAAccessTool {
 	 * @param url the url used for access
 	 * @param user the username used for access
 	 * @param password the password used for access
+	 * @param proxy the proxy to use (can be null)
 	 * @param projectKey the key of the project
+	 * @param jenkinsCredentialsId the id of the jenkins crednetials used for this jira
 	 */
 	public JIRAAccessTool(String url, String user, String password, String proxy, String projectKey, String jenkinsCredentialsId) {
 		this.url = url;
@@ -418,9 +426,14 @@ public class JIRAAccessTool {
 		restClient.getIssueClient().transition(issue, transition).claim();
 	}
 
+	/**
+	 * Receives all available Fields.
+	 * 
+	 * @return a List of the field metadata.
+	 */
 	public List<FieldMetadata> getAvailableFields() {
 		List<FieldMetadata> result = new ArrayList<FieldMetadata>();
-		for(Field f : restClient.getMetadataClient().getFields().claim()) {
+		for (Field f : restClient.getMetadataClient().getFields().claim()) {
 			
 			result.add(new FieldMetadata(f));
 		}
