@@ -151,9 +151,29 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 		String priority = varReplacer.replace(this.priority);
 		final String description = varReplacer.replace(this.description);
 		String parentJQL = varReplacer.replace(this.parentJQL);
-	
+
+		BasicIssueType issueType = jira.getIssueTypeByName(type);
+		final BasicPriority issuePriority = jira.getIssuePriorityByName(priority);
+		String parentKey = null;
+		
+		if (issueType.isSubtask()) {
+			List<Issue> result = jira.getTicketsByJQL(parentJQL);
+			if (result.size() != 1) {
+				throw new RuntimeException("Invalid number of tickets (" + result.size()
+						+ ") matching parent JQL '" + parentJQL + "'");
+			}
+			parentKey = result.get(0).getKey();
+		}
+		
+		final String finalParentKey = parentKey;
+		
 		if (performDuplicateCheck) {
 			String jql = "summary ~ \"" + title + "\"";
+			
+			//make sure to only consider tickets with the same parent if it is an subticket 
+			if (finalParentKey != null) {
+				jql += " AND parent = " + finalParentKey;
+			}
 			
 			/*
 			boolean alreadyPresent = 
@@ -175,22 +195,9 @@ public class AddTicketTemplate extends AbstractDescribableImpl<AddTicketTemplate
 			}
 		}
 		
-		BasicIssueType issueType = jira.getIssueTypeByName(type);
-		final BasicPriority issuePriority = jira.getIssuePriorityByName(priority);
 
 		logger.println("Creating Ticket \"" + title + "\".");
-		String parentKey = null;
 		
-		if (issueType.isSubtask()) {
-			List<Issue> result = jira.getTicketsByJQL(parentJQL);
-			if (result.size() != 1) {
-				throw new RuntimeException("Invalid number of tickets (" + result.size()
-						+ ") matching parent JQL '" + parentJQL + "'");
-			}
-			parentKey = result.get(0).getKey();
-		}
-		
-		final String finalParentKey = parentKey;
 		
 		final String ticketKey = jira.addTicket(new BuildingLambda<IssueInputBuilder>() {
 			

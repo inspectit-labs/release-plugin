@@ -19,19 +19,32 @@ public class FieldMetadata {
 	 */
 	private String humanReadableName;
 	
+	/**
+	 * Flag indicating that the given field is an array-field.
+	 */
 	private boolean isArray;
+	/**
+	 * Flag indicating whether the field is modifiable.
+	 */
 	private boolean isModifiable;
 	
+	/**
+	 * The type of the field (or of the elements if it is an array).
+	 */
 	private String elementType;
 	
+	/**
+	 * Constructor.
+	 * @param f the field to use for extracting the metadata.
+	 */
 	public FieldMetadata(Field f) {
 		internalName = f.getId();
 		humanReadableName = f.getName();
 		
 		FieldSchema schema = f.getSchema();
-		if(schema != null) {
+		if (schema != null) {
 			isModifiable = true;
-			if(schema.getType().equalsIgnoreCase("array")) {
+			if (schema.getType().equalsIgnoreCase("array")) {
 				isArray = true;
 				elementType = schema.getItems();
 			} else {

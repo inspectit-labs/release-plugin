@@ -28,7 +28,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 
-import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -54,6 +53,9 @@ public class JsonHTTPClientWrapper {
 	 */
 	private String password;
 	
+	/**
+	 * The proxy to use.
+	 */
 	private String proxy;
 	/**
 	 * the underlying http client.
@@ -70,6 +72,7 @@ public class JsonHTTPClientWrapper {
 	 * @param url the url of the server
 	 * @param user the username
 	 * @param password the password
+	 * @param proxy the proxy to use
 	 */
 	public JsonHTTPClientWrapper(String url, String user, String password, String proxy) {
 		this.url = url;
@@ -89,7 +92,7 @@ public class JsonHTTPClientWrapper {
 				AuthScope.ANY,
 				new UsernamePasswordCredentials(user, password));
 		HttpClientBuilder clientFactory = HttpClients.custom();
-		if(proxy != null) {
+		if (proxy != null) {
 			clientFactory.setProxy(HttpHost.create(proxy));
 		}
 		client = clientFactory.setDefaultCredentialsProvider(credsProvider).build();

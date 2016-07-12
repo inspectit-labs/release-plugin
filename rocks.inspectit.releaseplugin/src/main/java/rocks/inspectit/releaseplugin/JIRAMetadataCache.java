@@ -214,7 +214,7 @@ public final class JIRAMetadataCache {
 
 	
 	/**
-	 * returns the metadata of all available fields
+	 * returns the metadata of all available fields.
 	 * @param credentialsID
 	 * 		the id of the credentials of the JIRA project.
 	 * @return
@@ -295,7 +295,7 @@ public final class JIRAMetadataCache {
 		JIRAProjectCredentials cred = JIRAProjectCredentials.getByID(credentialsID);
 		JIRAAccessTool jira = null;
     	try {
-    		jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(),null, cred.getProjectKey(), credentialsID);
+    		jira = new JIRAAccessTool(cred.getUrl(), cred.getUrlUsername(), cred.getUrlPassword(), null, cred.getProjectKey(), credentialsID);
     		return commands.apply(jira);
     	} catch (Exception e) {
     		return null;
