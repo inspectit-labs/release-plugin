@@ -24,9 +24,11 @@
 		</license>
 	</licenses>
 	<developers>
-		<id>novatec</id>
-		<name>Novatec GmbH</name>
-		<email>info.inspectit@novatec-gmbh.de</email>
+		<developer>
+			<id>novatec</id>
+			<name>Novatec GmbH</name>
+			<email>info.inspectit@novatec-gmbh.de</email>
+		</developer>
 	</developers>
 	<scm>
 		<connection>scm:git:ssh://github.com/jenkinsci/release-helper-plugin.git</connection>
