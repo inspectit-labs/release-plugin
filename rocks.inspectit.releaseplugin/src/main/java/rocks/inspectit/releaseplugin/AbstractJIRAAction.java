@@ -103,7 +103,9 @@ public abstract class AbstractJIRAAction extends Builder {
 	  	}
 		if (params != null) {
 			for (ParameterValue val : params.getParameters()) {
-				variables.put(val.getName(), val.getValue().toString());
+				if (val.getValue() != null) {
+					variables.put(val.getName(), val.getValue().toString());
+				}
 			}
 		}
 		StrSubstitutor subs = new StrSubstitutor(variables);
