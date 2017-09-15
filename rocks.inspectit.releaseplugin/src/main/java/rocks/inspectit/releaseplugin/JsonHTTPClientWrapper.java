@@ -147,6 +147,7 @@ public class JsonHTTPClientWrapper {
 			}
 
 		} catch (Exception e) {
+			System.out.println("Error while executing request: "+ request);
 			throw new RuntimeException(e);
 		}
 	}

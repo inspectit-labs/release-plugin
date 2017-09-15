@@ -22,6 +22,10 @@
       	<f:textbox/>
     </f:entry>
     
+    <f:entry field="pageLabels" title="List of page labels">
+      	<f:textbox/>
+    </f:entry>
+    
     <f:entry field="jqlFilter" title="JQL Filter">
       	<f:textbox/>
     </f:entry>
