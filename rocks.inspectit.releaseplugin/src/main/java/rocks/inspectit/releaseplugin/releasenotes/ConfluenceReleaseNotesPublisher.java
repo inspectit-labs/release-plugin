@@ -44,7 +44,14 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
 	 * Title of the parent page.
 	 */
 	private String parentPageTitle;
-	
+	/**
+	 * Content of the page to publish.
+	 */
+	private String pageContent;
+	/**
+	 * Path of the doc to publish.
+	 */
+	private String releaseDocPath;
 	
 
 
@@ -58,16 +65,19 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
 	 * @param jqlFilter the jql filter
 	 * @param pageTitle the title of the new page
 	 * @param parentPageTitle the title of the parent page
+	 * @param pageContent the content of the new page
 	 */
 	@DataBoundConstructor
 	public ConfluenceReleaseNotesPublisher(String jiraCredentialsID,
 			String confluenceCredentialsID, String spaceKey, String jqlFilter,
-			String pageTitle, String parentPageTitle) {
+			String pageTitle, String parentPageTitle, String pageContent, String releaseDocPath) {
 		super(jiraCredentialsID, confluenceCredentialsID);
 		this.spaceKey = spaceKey;
 		this.jqlFilter = jqlFilter;
 		this.pageTitle = pageTitle;
 		this.parentPageTitle = parentPageTitle;
+		this.pageContent = pageContent;
+		this.releaseDocPath = releaseDocPath;
 	}
 
 	public String getSpaceKey() {
@@ -84,6 +94,14 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
 	
 	public String getParentPageTitle() {
 		return parentPageTitle;
+	}
+
+	public String getPageContent() {
+		return pageContent;
+	}
+	
+	public String getReleaseDocPath() {
+		return releaseDocPath;
 	}
 
 	@Override
@@ -103,12 +121,19 @@ public class ConfluenceReleaseNotesPublisher extends AbstractJIRAConfluenceActio
 		String spaceKey = varReplacer.replace(this.spaceKey);
 		String pageTitle = varReplacer.replace(this.pageTitle);
 		String parentPageTitle = varReplacer.replace(this.parentPageTitle);
+		String pageContent = varReplacer.replace(this.pageContent);
+		String releaseDocPath = varReplacer.replace(this.releaseDocPath);
 		
 		List<Issue> tickets = jira.getTicketsByJQL(jqlFilter);
 		
 		logger.println("Publishing " + tickets.size() + " tickets on page '" + pageTitle + "' in space '" + spaceKey + "' on confluence.");
+		logger.println("[Mitra Impementation] Publishing content :\n"
+				+ pageContent + "\n and release doc(html): " + releaseDocPath
+				+ "\n........on confluence.");
 		
 		String pageHTML = jira.buildReleaseNotesHTML(tickets);
+		String docHTML = jira.buildReleaseDocString(releaseDocPath);
+		pageHTML = pageHTML + "\n" + pageContent + "\n\n" + docHTML;
 		
 		Long parentPageID = null;
 		if (!parentPageTitle.isEmpty()) {
