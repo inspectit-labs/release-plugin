@@ -1,5 +1,8 @@
 package rocks.inspectit.releaseplugin;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -309,6 +312,29 @@ public class JIRAAccessTool {
 		}
 		
 		return resultHtml;
+	}
+	
+	/**
+	 * Builds a html document string using the given path variable
+	 * @param docPath path of the html document to publish
+	 * @return a Stroing containing html code
+	 */
+	public String buildReleaseDocString(String docPath) {
+		if (docPath.isEmpty() || docPath == null
+				|| "".equalsIgnoreCase(docPath)) {
+			return "";
+		}
+		String content = "";
+
+		try {
+			content = new String(Files.readAllBytes(Paths.get(docPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("IOException with release doc (html):'"
+					+ e);
+		}
+
+		return content;
 	}
 	
 	/**

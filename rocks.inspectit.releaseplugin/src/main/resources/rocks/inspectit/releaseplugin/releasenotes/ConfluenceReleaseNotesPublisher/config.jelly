@@ -21,6 +21,14 @@
     <f:entry field="pageTitle" title="Title of new Page">
       	<f:textbox/>
     </f:entry>
+
+    <f:entry field="pageContent" title="Content of new Page">
+      	<f:textbox/>
+    </f:entry>
+    
+    <f:entry field="releaseDocPath" title="Path of release doc(html)">
+      	<f:textbox/>
+    </f:entry>
     
     <f:entry field="jqlFilter" title="JQL Filter">
       	<f:textbox/>
