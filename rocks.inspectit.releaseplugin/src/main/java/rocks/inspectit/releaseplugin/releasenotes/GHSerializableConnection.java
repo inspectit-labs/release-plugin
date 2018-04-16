@@ -16,6 +16,7 @@ import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.SocketAddress;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import jenkins.model.Jenkins;
 
@@ -96,13 +97,10 @@ public class GHSerializableConnection implements Serializable{
 			proxy = new Proxy(proxyType, proxySocketAdress);
 		}
 		OkHttpClient client = new OkHttpClient().setProxy(proxy);
-		//Use default caching
-		/*
-        if (config.getClientCacheSize() > 0) {
-            Cache cache = toCacheDir().apply(config);
-            client.setCache(cache);
-        }
-        */
+		client.setConnectTimeout(10, TimeUnit.MINUTES);
+		client.setWriteTimeout(30, TimeUnit.MINUTES);
+		client.setReadTimeout(30, TimeUnit.MINUTES);
+
 
         return new OkHttpConnector(new OkUrlFactory(client));
 	}
