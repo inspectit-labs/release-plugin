@@ -3,6 +3,7 @@ package rocks.inspectit.releaseplugin;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -172,8 +173,8 @@ public class JsonHTTPClientWrapper {
 		putReq.addHeader("content-type", "application/json");
 		putReq.addHeader("Accept", "application/json");
 		try {
-			putReq.setEntity(new StringEntity(new Gson().toJson(element)));
-		} catch (UnsupportedEncodingException e) {
+			putReq.setEntity(new StringEntity(new Gson().toJson(element), "UTF-8"));
+		} catch (UnsupportedCharsetException e) {
 			throw new RuntimeException(e);
 		}
 		return executeRequest(putReq);
@@ -200,8 +201,8 @@ public class JsonHTTPClientWrapper {
 		postReq.addHeader("content-type", "application/json");
 		postReq.addHeader("Accept", "application/json");
 		try {
-			postReq.setEntity(new StringEntity(new Gson().toJson(element)));
-		} catch (UnsupportedEncodingException e) {
+			postReq.setEntity(new StringEntity(new Gson().toJson(element), "UTF-8"));
+		} catch (UnsupportedCharsetException e) {
 			throw new RuntimeException(e);
 		}
 		return executeRequest(postReq);
@@ -248,9 +249,5 @@ public class JsonHTTPClientWrapper {
 
 	public CloseableHttpClient getHttpClient() {
 		return client;
-	}
-
-	
-	
-	
+	}	
 }

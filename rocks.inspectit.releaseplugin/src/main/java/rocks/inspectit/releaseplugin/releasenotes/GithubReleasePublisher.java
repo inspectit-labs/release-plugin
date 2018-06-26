@@ -35,6 +35,7 @@ import jenkins.model.Jenkins;
 
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.jenkinsci.remoting.RoleChecker;
+import org.kohsuke.github.GHAsset;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHReleaseBuilder;
 import org.kohsuke.github.GHRepository;
@@ -167,7 +168,7 @@ public class GithubReleasePublisher extends Notifier {
 
 		JIRAProjectCredentials jiraCred = getJiraCredentials();
 		
-		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(),null, jiraCred.getProjectKey(), getJiraCredentialsID());
+		JIRAAccessTool jira = new JIRAAccessTool(jiraCred.getUrl(), jiraCred.getUrlUsername(), jiraCred.getUrlPassword(), null, jiraCred.getProjectKey(), getJiraCredentialsID());
 		
 		String jqlFilter = varReplacer.replace(this.jqlFilter);
 		String repoName = varReplacer.replace(this.repoName);
@@ -188,7 +189,7 @@ public class GithubReleasePublisher extends Notifier {
 		}
 		
 		if (repo == null) {
-			throw new RuntimeException("Repository with name " + repoName + " was not found! did you specify the orrect credentials udner the git section?");
+			throw new RuntimeException("Repository with name " + repoName + " was not found! did you specify the orrect credentials under the git section?");
 		} else {		
 			
 
@@ -209,16 +210,55 @@ public class GithubReleasePublisher extends Notifier {
 			GHSerializableConnection ghConnection = new GHSerializableConnection(repositoryName);
 			
 			final GHRelease rel = releaseBuilder.create();
+			
 			for (FilePath path : build.getWorkspace().list(artifactPatterns)) {
 
-				logger.println("Uploading asset to release: " + path.getName());
-				path.act(new GHReleaseFileCallable(ghConnection,releaseName));
+				String assetName = path.getName();
+				
+				boolean uploadSuccessful = false;
+				int numberOfTrialsLeft = 3;
+				do {					
+					try {
+						try {
+							//sleep a while to prevent issues if the assets are uploaded from different machines
+							Thread.sleep(1000);
+						} catch (Exception e3) { }
+						numberOfTrialsLeft--;
+						logger.println("Uploading asset to release: " + assetName);
+						path.act(new GHReleaseFileCallable(ghConnection, releaseName));	
+						uploadSuccessful = true;
+					} catch (Exception e) {
+						logger.println("Asset upload failed (" + e.getClass().getName() + ": " + e.getMessage() + ")");
+						try {
+							//here a very long sleep is required as otherwise we run into issues with the asset list
+							//being not up-to-date
+							Thread.sleep(60000);
+						} catch (Exception e3) { }
+						//try deleting the failed asset if it still was created
+						for (GHAsset asset : rel.getAssets()) {
+							if (asset.getName().equals(assetName)) {
+								logger.println("Deleting invalid asset from release (ID: " + asset.getId() + ").");	
+								try {
+									asset.delete();
+								} catch (Exception e2) {
+									logger.println("Could not delete asset, continuing anyway.. (" + e2.getClass().getName() + ": " + e2.getMessage() + ")");										
+								}
+							}
+						}
+						try {
+							Thread.sleep(5000);
+						} catch (Exception e3) { }
+						if (numberOfTrialsLeft > 0) {
+							logger.println("Retrying upload " + numberOfTrialsLeft + " times.");						
+						} else {
+							logger.println("Aborting build due to upload failure.");
+							//build failure in case that we tried to often
+							throw e;
+						}
+					}
+				} while (!uploadSuccessful && numberOfTrialsLeft > 0);
 			}
-			
-			
 		}
-		
-		
 		
 		jira.destroy();
 
